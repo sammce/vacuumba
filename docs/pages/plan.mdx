@@ -1,0 +1,151 @@
+import { Image, Meta, NextPrevLink } from "../components";
+import CloseIcon from "@mui/icons-material/Close";
+import DoneIcon from "@mui/icons-material/Done";
+import { Center, HStack } from "@chakra-ui/react";
+
+export const meta = {
+  title: "Investigation & Plan",
+};
+
+# Investigation & Plan
+
+## Smart Speaker
+
+This idea involves allowing a user to interact with a smart speaker via a web interface.
+They could perform actions like playing certain music or setting reminders from any device
+with internet access.
+
+#### Existing Solutions
+
+This solution is similar to Alexa[^1], a popular home assistant made by Amazon.
+
+<Image src="./images/alexa.jpeg" alt="alexa picture" width={500} />
+<Center>Image source [^5]</Center>
+
+<HStack>
+  <h4>Reason for Rejection</h4> <CloseIcon sx={{ color: "red" }} />
+</HStack>
+
+Developing a website for smart devices is difficult as the companies which produce them are extremely strict regarding developing software for them. This is mostly for security reasons, but makes this idea slightly too cumbersome. A project of this calibre may also take too long to complete.
+
+## Smart Camera
+
+This device would act as a security camera which users could place where they please.
+It would contain a motion sensor and stream the video feed to the web interface.
+It might also display information such as timestamps when motion is detected in its field of view.
+
+#### Existing Solutions
+
+Ring Doorbell[^2] is an American company which offers an almost identical product.
+
+<Image src="./images/ring.jpeg" alt="ring picture" width={500} />
+<Center>Image source [^6]</Center>
+
+<HStack>
+  <h4>Reason for Rejection</h4> <CloseIcon sx={{ color: "red" }} />
+</HStack>
+
+It would be difficult to ensure the absolute security of the camera feed, and it would be serious issue if a malicious user were to gain access to another user's camera feed.
+
+## Smart Vacuum
+
+A smart vacuum would allow users to remotely start the vacuum from the web interface, as well as view information recorded by the vacuum such as the room temperature and the times of recent vacuums.
+
+#### Existing Solutions
+
+Roomba[^3], made by iRobot, is the closest product to this description but unlike the others has fewer competitors. Their solutions are also quite expensive, with the cheapest being €329.00[^4].
+
+<Image src="./images/roomba.jpeg" alt="roomba picture" />
+<Center>Image source [^7]</Center>
+
+<HStack>
+  <h4>Reason for Acceptance</h4>
+  <DoneIcon sx={{ color: "lightgreen" }} />
+</HStack>
+
+I already own a buggy with ultrasonic distance sensing for micro:bit, called the Robo:bit MK3[^8]. It is also easier to develop for this buggy as it is completely programmable. This means I would not have to deal with strict guidelines from corporations like Amazon.
+
+## Project purpose and ideology
+
+The main functionality that this project aims to provide to users is the ability to control an autonomous vacuum from our web interface.
+
+This will allow users to easily monitor and maintain the cleanliness of their homes.
+
+There are minimal ethical concerns with the project, as data about the users such as IP addresses is not collected. The user also has full control over the physical artefact.
+
+## Hardware requirements
+
+The hardware (vacuum) should do the following:
+
+- Be able to drive autonomously
+- Collect data from sensors such as room temperature
+- Start and stop on command
+- Avoid obstacles using a distance sensor
+
+The vacuum will receive instructions from another micro:bit (a controller) connected to a computer running a web server. My solution is to use a computer which is connected to a micro:bit via serial port. This micro:bit can then communicate with the micro:bit in the vacuum via the 'radio' module to forward instructions.
+
+## User/Software requirements
+
+The user should be able to do the following:
+
+- Initiate and stop a vacuum.
+- View various data points, such as the most recent vacuum and the total number of vacuums.
+- Log in to the website from any device.
+
+The pages that will be required to achieve this are:
+
+- The home page
+- A log in / sign up page
+- A vacuum control panel
+- A supplementary mock product page
+
+The user should also feel comfortable using the website, which can be accomplished using spacious designs with small animations.
+
+There should also be a great focus on design consistency throughout the site. This will help the user build familiarity with the website, making it easier to navigate over time.
+
+The project will also focus on making the site accessible to all users. I plan to do this by implementing fully featured keyboard navigation and adhering to screen readers using the Accessible Rich Internet Applications (ARIA)[^9] standard. ARIA is a set of HTML attributes which screen readers use to convey additional information about a page to the lesser-abled user.
+
+<NextPrevLink
+  next={{
+    href: "design",
+    label: "Design",
+  }}
+/>
+
+[^1]: Amazon Alexa (Amazon)
+
+    https://developer.amazon.com/en-US/alexa
+
+[^2]: Ring Doorbell (Ring)
+
+    https://eu.ring.com/
+
+[^3]: Roomba vacuum (iRobot)
+
+    https://www.irobot.ie/roomba
+
+[^4]: Least Expensive Roomba (iRobot)
+
+    https://www.irobot.ie/roomba/600-series
+
+[^5]: Alexa Image (Unsplash)
+
+    https://unsplash.com/s/photos/alexa
+
+[^6]: Ring Doorbell Image (Unsplash)
+
+    https://unsplash.com/s/photos/ring-doorbell
+
+[^7]: Roomba Vacuum Image (Unsplash)
+
+    https://unsplash.com/s/photos/robot-vacuu
+
+[^8]: Robo:bit MK3 Buggy (4Tronix)
+
+    https://shop.4tronix.co.uk/collections/robobit/products/robo-bit-mk3
+
+[^9]: Accessible Rich Internet Applications, ARIA (Mozilla)
+
+    https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA
+
+export default Meta(meta);

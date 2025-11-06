@@ -1,0 +1,43 @@
+.hamburgerTop {
+    animation: hamburger-top .6s both;
+}
+
+.hamburgerBottom {
+    animation: hamburger-bottom .6s both;
+}
+
+@keyframes hamburger-top {
+  0% {
+    transform: translate(0) rotate(0);
+  }
+
+  40% {
+    transform: translate(0, 10px) rotate(0);
+  }
+
+  55% {
+    transform: translate(0, 10px) rotate(0);
+  }
+
+  100% {
+    transform: translate(0, 10px) rotate(-45deg);
+  }
+}
+
+@keyframes hamburger-bottom {
+  0% {
+    transform: translate(0);
+  }
+
+  40% {
+    transform: translate(0, -10px) rotate(0);
+  }
+
+  55% {
+    transform: translate(0, -10px) rotate(0);
+  }
+
+  100% {
+    transform: translate(0, -10px) rotate(45deg);
+  }
+}

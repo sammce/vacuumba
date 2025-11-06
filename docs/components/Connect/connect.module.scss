@@ -1,0 +1,46 @@
+@mixin turnColor($turn) {
+  &:hover,
+  &:focus-visible {
+    background-color: var(--lccs-colors-#{$turn});
+  }
+
+  &:active {
+    background-color: var(--lccs-colors-#{$turn});
+  }
+
+  transition: background-color 0.1s ease;
+}
+
+.main {
+  @include turnColor(red-100);
+}
+
+.opponent {
+  @include turnColor(yellow-100);
+}
+
+.piece {
+  transition: all 0.1s ease;
+}
+
+.pulsate {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+
+  40% {
+    opacity: 0.5;
+  }
+
+  60% {
+    opacity: 0.5;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}

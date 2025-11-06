@@ -1,0 +1,176 @@
+import { Swatch, Image, Meta, NextPrevLink } from "../components";
+import { Text } from "@chakra-ui/react";
+export const meta = {
+  title: "Design",
+};
+
+# Design
+
+## Hardware
+
+### Communication
+
+To communicate between the server and the micro:bit that it's connected to,
+I have decided to utilise serial ports.
+The protocol for dataflow between the devices is outlined below:
+
+<Image src="./images/serial.png" alt="serial diagram" />
+
+The two micro:bits will communicate wirelessly via the `radio` module[^1].
+A similar protocol to the one above will be used for this communication loop to retain the simplicity of the system.
+This will allow the vacuum to report sensor information such as temperature.
+
+Such a communication protocol will be used to also issue commands to the vacuum at
+the users request, such as starting and stopping.
+
+The micro:bit connected to the server will essentially
+act as a middle-man between the server and the vacuum, as they cannot communicate directly between each other. It could
+be achieved with Bluetooth, but the MicroPython runtime is too memory intensive to support the Bluetooth stack[^2].
+
+<Image src="./images/communication.png" alt="communication diagram" w={700} />
+
+### Vacuum driving
+
+The vacuum itself will be autonomous. It will remain idle until it
+receives a message from the controller telling it to start vacuuming.
+
+It will then navigate the room, avoiding any obstacles.
+This can be accomplished by instructing it to drive straight,
+until it reaches an obstacle. Obstacles can be detected using
+an ultrasonic distance sensor.
+
+<Image src="./images/ultrasonic.png" alt="ultrasonic diagram" />
+
+The speed of the ping is $340m/s$ (speed of sound in air), so the distance $S$ is given by:
+
+$$
+S = \frac{340 \times time}{2}
+$$
+
+If this distance is less than 10cm, the vacuum will programatically turn in a random direction
+and continue driving straight, allowing it to drive indefinitely
+regardless of the shape of the room. This is outlined below.
+
+<Image src="./images/driving.png" alt="ultrasonic diagram" w={600} />
+
+## Software
+
+### Accessibility
+
+The main focus for the website will be its usability and accessibility.
+Discrimination has no place in our society, and the web is no different.
+The two most common disabilities are visual impairment and poor fine motor skills.
+Both have been considered extensively.
+
+I will implement a strict contrast ratio,
+in accordance with the Web Content Accessibility Guidelines (WCAG)[^3].
+It states that adjacent elements should have a contrast ratio of 4.5:1.
+The colour scheme of the website shown below has been chosen carefully with this rule in mind.
+
+| Colour name          | Hex code | Example                                          |
+| -------------------- | -------- | ------------------------------------------------ |
+| Primary              | #0C6F96  | <Swatch color="#0C6F96" />                       |
+| Seconday             | #FBC390  | <Swatch color="#FBC390" />                       |
+| Background           | #171723  | <Swatch color="#171723" />                       |
+| Alternate Background | #282832  | <Swatch color="#282832" />                       |
+| Text                 | #FFFFFF  | <Swatch color="#FFFFFF" borderColor="#000000" /> |
+
+I will also use the HTML `tabindex`[^4] attribute to allow a customised
+and fluid keyboard navigation system. This ensures that users who cannot
+effectively use a mouse can still navigate[^5].
+
+## Modern design
+
+I will be utilising a library called React[^6] to help me
+implement consistent design. React allows developers to
+split their application into separate files called 'components'[^7].
+For example, the header on each page is a component.
+You can then reuse this component across your app,
+instead of copying and pasting the code.
+
+Another benefit of React is the rich ecosystem of packages available.
+I will use a package called Chakra-UI[^8], which will let me use some
+predefined components such as buttons and tables.
+This combination will enforce a consistent and maintainable design
+philosophy throughout the website.
+
+## Database
+
+The database I have decided to use is SQLite3. This is a lightweight, file based SQL
+format which is simple to use and very transfereble. The data required to be stored is
+login information of the users and the data related to their vacuum. The tables are as
+follows:
+
+### User table
+
+| id          | email   | password | is_superuser |
+| ----------- | ------- | -------- | ------------ |
+| Primary Key | Varchar | Varchar  | Boolean      |
+
+It's important to note that the password will only ever stored in the database once it has
+been hashed using the PBKDF2[^9] algorithm for security.
+
+### Vacuum table
+
+| id          | user        | last_vacuum | vacuum_count |
+| ----------- | ----------- | ----------- | ------------ |
+| Primary Key | Foreign Key | Datetime    | Integer      |
+
+The user foreign key could be used to differentiate between different vacuums, but I'm not sure
+the timeframe of the project will allow me to implement it.
+
+## Overall system
+
+Below is the diagram of how the entire system operates in tandem.
+
+<Image src="./images/overall.png" alt="overall system diagram" w={700} />
+
+<NextPrevLink
+  previous={{
+    href: "plan",
+    label: "Investigation & Plan",
+  }}
+  next={{
+    href: "implementation",
+    label: "Implementation & Testing",
+  }}
+/>
+
+[^1]: MicroPython Radio Documentation (BBC micro:bit)
+
+    https://microbit-micropython.readthedocs.io/en/v1.0.1/radio.html
+
+[^2]: Bluetooth Stack Incompatibility (BBC micro:bit)
+
+    https://microbit-micropython.readthedocs.io/en/v1.0.1/ble.html
+
+[^3]: Web Content Accessibility Guidelines, WCAG (W3)
+
+    https://www.w3.org/WAI/standards-guidelines/wcag/
+
+[^4]: `tabindex` Documentation (Mozilla)
+
+    https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/tabindex
+
+[^5]:
+    Article about people with motor-skill disabilities and their web experience (The We Co)
+
+    https://theweco.com/designing-websites-for-motor-skill-disabilities/
+
+[^6]: React Website (Facebook)
+
+    https://reactjs.org
+
+[^7]: React Component Documentation (Facebook)
+
+    https://reactjs.org/docs/components-and-props.html
+
+[^8]: Chakra UI Website (Chakra-UI)
+
+    https://chakra-ui.com/
+
+[^9]: PBKDF2 Hashing Algorithm (Wikipedia)
+
+    https://en.wikipedia.org/wiki/PBKDF2
+
+export default Meta(meta);

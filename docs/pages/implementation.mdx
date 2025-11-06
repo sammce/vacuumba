@@ -1,0 +1,421 @@
+import { Link } from "@chakra-ui/react";
+import { Image, Meta, NextPrevLink } from "../components";
+
+export const meta = {
+  title: "Implementation & Testing",
+};
+
+# Implementation & Testing
+
+## Video of artefact
+
+<video src="./images/movie.mp4" controls style={{ margin: "2rem 0" }} />
+
+## Project timeline
+
+To help manage my time during this project, I split the project into the following
+milesones and timescales. They follow quite closely to the structure of the brief:
+
+| Milestone         | Timescale |
+| ----------------- | --------- |
+| Research Hardware | 1 week    |
+| Research software | 1 week    |
+| Plan              | 1 week    |
+| Design            | 2 weeks   |
+| Code micro:bit    | 2 weeks   |
+| Code website      | 4 weeks   |
+| Test the system   | 1 week    |
+
+I managed to keep to it quite well.
+
+## Design changes
+
+Before I dive into the code, I'll touch briefly on the changes made between this stage
+and the design stage. I found there wasn't many differences, the only notable ones being the clear
+lack of actual vacuuming on the device and the fact that the system only works for one user.
+
+The vacuum issue is due to the fact that I could not find a suitable attachment which worked for the micro:bit,
+and the system working for multiple users was simply abandoned due to time constraints.
+
+## System architecture
+
+### Serial communication
+
+The first implementation milestone I had was to create the infrastructure for the controller/vacuum
+communication protocol.
+
+I programmed both in MicroPython[^1]. I dabbled with the idea of using C++ for the vacuum,
+but it would have taken too long to learn, plus I already had an understanding of the quirks of
+MicroPython.
+
+The computer running the web server was connected to the
+'controller' micro:bit via USB. I could then use the Python package `pySerial`[^2] to open a connection
+between them and send messages. I had some trouble with this, as the documentation for
+using `uart`[^3] communication on the micro:bit is far from simple. I
+essentially had to experiment with different solutions until I found one which worked.
+
+I ended up with the following protocol for sending messages:
+
+- Pad message out to 50 bytes
+- Send message
+- Wait for confirmation message
+
+The reason I padded the message to 50 bytes is because the `uart` module which I used
+on the micro:bit requires me to pass it an amount of bytes to read from the serial buffer.
+Padding the messages to a common length allowed me to ensure every message was the same length,
+leading to consistent communication. The code to achieve this on the micro:bit is shown below, and can
+be found in `Artefact/vacuum/controller.py`.
+
+```py
+from microbit import uart
+...
+class Interface:
+    BYTE_COUNT = 50
+    ...
+
+    def __init__(self):
+        uart.init(baudrate=115200, bits=8, stop=1)
+
+    def normalize_message(self, msg: str) -> str:
+        """
+        Pad msg to a length of Interface.BYTE_COUNT so that
+        messages via serial port are always the same length
+        """
+        return msg + " " * (self.BYTE_COUNT - len(msg))
+
+    def send(self, msg: str) -> bool:
+        """
+        Write msg to the serial port connection
+        """
+        return bool(uart.write(self.normalize_message(msg)))
+
+    def receive(self): # Return annotation ommitted bc micro:bit doesn't support Union
+        """
+        Receive and convert any bytes on the pipeline to str, and return the string.
+        Return None if there's no message present.
+        """
+        if uart.any():
+            content = uart.read(self.BYTE_COUNT)
+            return str(content, "utf-8").strip() # Remove redundant whitespace
+```
+
+I chose to follow an Object Oriented design pattern, as it allowed
+me to encapsulate my code to a greater extent than using functions. It also allowed me to share names across different modules.
+For instance, take a look at the `Interface` class in `Artefact/backend/utils/interface.py`.
+
+```py
+import serial
+...
+class Interface:
+    BYTE_COUNT = 50
+    ...
+
+    def __init__(self):
+        """
+        Establish connection to micro:bit via serial port.
+        """
+        mb_port = self.get_microbit_port()
+        self.serial = serial.Serial(mb_port, baudrate=115200, bytesize=8, timeout=2)
+
+    def send(self, msg: str) -> bool:
+        """
+        Send msg to the micro:bit via the serial port.
+        """
+        return bool(self.serial.write(msg.encode("utf-8")))
+
+    def receive(self) -> str:
+        """
+        Block execution and read serial pipeline until either:
+            A message is found of length Interface.BYTE_COUNT;
+            The timeout limit is reached;
+        """
+        return self.serial.read(self.BYTE_COUNT).decode("utf-8").strip()
+```
+
+As you can see, it's almost identical to `controller.py`, just with different logic.
+This without a doubt sped up the development process tremendously
+as I didn't need to keep looking back at my code, as the behaviour of each module
+was predictable.
+
+### Distance sensing
+
+I followed the formula in the <Link href="./design.html">Design</Link> stage to write the following code. It
+can be found in `Artefact/vacuum/vacuum.py`
+
+```py
+from microbit import pin15 as USPing # US = ultrasonic
+...
+class Vaccum:
+    ...
+    def get_distance(self):
+        # Send 15 microsecond pulse
+        USPing.write_digital(1)
+        sleep_us(15)
+        USPing.write_digital(0)
+
+        # Wait for pulse to return
+        while USPing.read_digital() == 0:
+            pass
+
+        # Start time as soon as it returns
+        start = ticks_us()
+
+        # Wait for pulse to finish
+        while USPing.read_digital() == 1:
+            pass
+
+        # Calculate distance
+        end = ticks_us()
+        cm_conversion = 10**-4
+        return int((340 / 2) * (end - start) * cm_conversion)
+```
+
+I had done something similar previously, so it was easier the
+second time around, though it did take some thinking and a few diagrams. It works as expected, and can be seen in action towards the end
+of the video.
+
+### Website
+
+Firstly, I used a superset of JavaScript called TypeScript[^4], made my Microsoft, to make the website
+It allows you to specify variable types like statically typed languages such as Java, something
+which JavaScript lacks. It looks like this:
+
+```ts
+// isTrue can only ever be boolean now
+let isTrue: boolean = true;
+```
+
+If I then try to assign a string to it, I get the following error in Visual Studio Code:
+
+<Image
+  src="./images/ts.png"
+  alt="typescript example"
+  boxSize={200}
+  width={600}
+/>
+
+This prevents many bugs before they happen, as you know at any point what type of value
+a variable will hold.
+
+For the website, I coupled TypeScript with a library called React[^5], created by Facebook, which handles
+updating the DOM .
+As mentioned in my <Link href="./design.html">Design</Link> stage,
+it allowed me to split my application into components. An example button component is shown
+below, written in TypeScript. It's important to note that TypeScript gets compiled to JavaScript,
+as TypeScript cannot be run by browsers. The benefit of typescript is only seen during development.
+
+```tsx
+export function Button() {
+  return <button>I am a custom button component!</button>;
+}
+```
+
+I don't expect you to have seen this before, and it's not vital that you understand it
+fully. Just know I can import this `Button` component into other files, and use it like a regular
+HTML tag.
+
+```tsx
+<Button />
+```
+
+That tag syntax is known as JSX[^6] (JavaScript XML) and is just syntactic sugar. It gets
+converted by React as follows:
+
+```tsx
+<Button color="red">Click me</Button>;
+// Compiles to
+React.createElement(button, { color: "red" }, "Click me");
+
+// I know which one I would rather write!
+```
+
+Anywhere `<Button />` appears, my custom button will be rendered in its place.
+
+For additional style points, I used a package called Chakra UI[^7]. It is a component
+library which comes with a plethora of these components prebuilt with accessibility in mind.
+
+The entire website was made using these 3 technologies, and its code can be found in
+`Artefact/frontend`.
+
+### Backend server
+
+For the business logic, I used a framework called Django[^8]. Its a robust Python framework
+for building performant web applications. It also has an Object Relational Mapping (ORM) for working with
+databases. I developed a Rest API on top of Django, which is a set of endpoints (urls) to
+which the frontend can send requests to perform certain actions. Its code is in `Artefact/backend`.
+
+I coupled this with the database schema defined in the <Link href="./design.html">Design</Link> stage
+to allow the user to view and mutate their vacuums data via the web interface. Below is the backend
+logic for starting a vacuum. File: `Artefact/backend/api/views.py`
+
+```py
+# Get users vacuum model from database
+try:
+    vacuum = models.Vacuum.objects.get(owner=request.user)
+except models.Vacuum.DoesNotExist:
+    return Response(
+        {"detail": "No vacuum belonging to your account found."},
+        status=status.HTTP_403_FORBIDDEN,
+    )
+
+try:
+    interface = Interface()
+except MicrobitNotFoundError:
+    return Response(
+        {"detail": "Vacuum/controller is not plugged in"},
+        status=status.HTTP_404_NOT_FOUND,
+    )
+
+# Initiate a vacuum
+try:
+    started = interface.start_vacuum()
+except InterfaceError:
+    return Response(
+        {"detail": "Vacuum is not responding. Is it turned on?"},
+        status=status.HTTP_404_NOT_FOUND,
+    )
+
+# Update information
+if started:
+    vacuum.vacuum_count += 1
+    vacuum.last_vacuum = datetime.now()
+
+    vacuum.save()
+
+    return Response("Vacuum started")
+else:
+    return Response(
+        {"detail": "Vacuum is already in use."}, status=status.HTTP_409_CONFLICT
+    )
+```
+
+First, the server performs validation. It checks to see if the user owns a vacuum,
+if it is plugged in and if it responded to the start call. If these
+operations fail, an informative error message is returned to the frontend. The following frontend code
+listens for these errors and displays the information to the user. File: `Artefact/frontend/hooks/useInputFeedback.ts`
+
+```ts
+function evaluate(response: FetchSuccess<unknown> | FetchError) {
+    if (!response.isError) return;
+
+    if (typeof response.data.detail === "string") {
+      toast({
+        title: "Something went wrong :(",
+        description: response.data.detail,
+        status: "error",
+        isClosable: true,
+      });
+    }
+    ...
+```
+
+The `toast()` call shows the following message to the user:
+
+<Image src="./images/toast.png" alt="Toast example" w={800} boxSize={150} />
+
+## Testing
+
+For the testing process, I defined the following tests:
+
+| System(s)                   | Description                                   | Expected result                                               |
+| --------------------------- | --------------------------------------------- | ------------------------------------------------------------- |
+| Frontend + Backend          | Signup to the site                            | A success message comes up and the user is logged in          |
+| Frontend + Backend          | Login to the site using valid credentials     | A success message comes up and the user is logged in          |
+| Frontend + Backend          | Submit invalid credentials                    | An appropriate error message is displayed                     |
+| Frontend + Backend + Vacuum | View the vacuum data on the manage page       | The data table should show the correct data from the database |
+| Frontend + Backend + Vacuum | Start the vacuum with website                 | The vacuum starts and the UI is updated                       |
+| Frontend + Backend + Vacuum | Turn off the vacuum with website              | The vacuum stops and the UI is updated                        |
+| Vacuum                      | Start vacuum, and place obstacles in its path | The vacuum avoids the obstacles                               |
+
+All of these tests are integration tests, because they are testing how the
+systems work together. I used a tool called Jest[^9], maintained by
+Facebook, to write React unit tests. Below is a test I wrote for the `Header` component.
+File: `Artefact/frontend/__tests__/Header.test.tsx`.
+
+```tsx
+// describe() creates a test suite
+describe("Header", () => {
+  // beforeEach() runs before each test in the suite
+  beforeEach(() => {
+    render(<Header />);
+  });
+
+  // it() creates an individual unit test
+  it("renders the main heading", () => {
+    const heading = screen.getByText("vacuumba");
+    expect(heading).toBeVisible();
+  });
+
+  it("renders a login button", () => {
+    const btn = screen.getByText("Login");
+    expect(btn).toHaveClass("chakra-button");
+    expect(btn).toBeVisible();
+  });
+});
+```
+
+This gives the following output when the tests are run:
+
+<Image
+  src="./images/jest.png"
+  alt="jest example output"
+  width={600}
+  boxSize={300}
+/>
+
+<NextPrevLink
+  next={{
+    href: "evaluation",
+    label: "Evaluation",
+  }}
+  previous={{
+    href: "design",
+    label: "Design",
+  }}
+/>
+
+## Video Bibliography
+
+ARIA: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA
+
+WCAG: https://www.w3.org/WAI/standards-guidelines/wcag/
+
+Effect of animations: https://yalantis.com/blog/web-animation-technologies-and-tools/#:~:text=Animations%20can%20help%20you%20create,web%20app%20unique%20and%20modern.
+
+[^1]: Microbit MicroPython API (BBC micro:bit)
+
+    https://microbit-micropython.readthedocs.io/en/v1.0.1/microbit_micropython_api.html
+
+[^2]: pySerial Documentation (Python Hosted)
+
+    https://pythonhosted.org/pyserial/
+
+[^3]: MicroPython UART Documentation. (BBC micro:bit)
+
+    https://microbit-micropython.readthedocs.io/en/v1.0.1/uart.html
+
+[^4]: TypeScript Website (Microsoft)
+
+    https://www.typescriptlang.org/
+
+[^5]: React Website (Facebook)
+
+    https://reactjs.org/
+
+[^6]: React 'JSX' Documentation (Facebook)
+
+    https://reactjs.org/docs/introducing-jsx.html
+
+[^7]: Chakra UI Website (Chakra-UI)
+
+    https://chakra-ui.com/
+
+[^8]: Django Website (Django Project)
+
+    https://www.djangoproject.com/
+
+[^9]: Jest Website (Facebook)
+
+    https://jestjs.io/
+
+export default Meta(meta);

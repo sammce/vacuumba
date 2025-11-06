@@ -1,0 +1,46 @@
+import { Text, Badge, Link, HStack } from "@chakra-ui/react";
+import { Meta, ExamNumber, NextPrevLink } from "../components";
+import DownIcon from "@mui/icons-material/KeyboardArrowDown";
+
+export const meta = {
+  title: "Vacuumba report",
+};
+
+# Vacuumba report
+
+## Prerequisites
+
+- To navigate between the different sections of the documentation, click the menu icon at the
+  top left of the screen. This will open a drawer of links around the site.
+
+- Any word counts exclude titles, tables, images and code where applicable.
+
+- Each stage's bibliography can be found at the bottom of its respective page.
+  Every reference will have a footnote (e.g. [^1], [^2] etc) which you can click
+  on to highlight that reference in the bibliography section.
+
+- This website has been compiled from React to static HTML to adhere to brief instructions.
+  As a result you cannot read the code (easily anyway). I have included the report website's source code
+  in `Report/source`.
+
+- With the deadline extension, I made a <Link href="./connect.html">Connect Four</Link> game.
+  Try it with a loved one if you want to take a break.
+
+N.B The bibliography on this page is for showcase purposes only.
+
+<NextPrevLink
+  next={{
+    href: "plan",
+    label: "Investigation & Plan",
+  }}
+/>
+
+[^1]: Example
+
+    https://example.com
+
+[^2]: Other example
+
+    https://other-example.com
+
+export default Meta(meta);

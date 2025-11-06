@@ -1,0 +1,73 @@
+import { Link } from "@chakra-ui/react";
+import { Meta, NextPrevLink } from "../components";
+
+export const meta = {
+  title: "Evaluation",
+};
+
+# Evaluation
+
+## Requirements
+
+### Hardware
+
+For the most part, I met the requirements I set for myself. As previously mentioned,
+the device lacks vacuum capability, but other than that functions as expected.
+
+The vacuum can do the following, as mentioned in my requirements:
+
+- Communicate with the 'controller' micro:bit via serial port.
+- Drive autonomously
+- Detect obstacles and avoid them
+
+### Software
+
+The accompanying web interface can do the following, as outlined:
+
+- Display the current state of the vacuum
+- Adhere to lesser abled users who may use keyboard navigation or screen readers.
+
+I had to think carefully when designing the site with accessibility in mind,
+but I think the additional effort would be more than worth it in a real world
+application.
+
+### System
+
+As a whole the system can:
+
+- Store and retrieve data in/from a live database via a web server.
+- Allow the user to manually start and stop their vacuum.
+- React accordingly to errors and unexpected events such as the vacuum not being turned on.
+
+## In the context of the brief
+
+I believe that the artefact suffiently meets the advanced requirements
+(and by extension the basic requirements). It meets them in the following ways:
+
+- The user can control the artefact and monitor information such as room temperature.
+- Data is captured via the sensors on the micro:bit.
+- The interface consists of various elements (i.e. tables, buttons, labels, inputs, scroll areas etc).
+- All inputs/actions are validated on the client side and on the server.
+
+## User needs
+
+The user can do everything I mentioned in the <Link href="./plan.html">Plan</Link> stage,
+such as control the vacuum. The biggest challenge was certainly the log in system.
+I have implemented similar systems before in production applications, but it was
+still challenging nonetheless.
+
+## Conclusion
+
+Overall, I found the process of developing vacuumba to be educational and enjoyable,
+while also proving thought provoking in certain areas. It required vast research and
+detailed planning, but my rigorous documentation was invaluable as the development process
+unraveled.
+
+<NextPrevLink
+  previous={{
+    href: "implementation",
+    label: "Implementation & Testing",
+  }}
+/>
+
+export default Meta(meta);
